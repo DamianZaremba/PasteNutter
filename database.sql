@@ -41,5 +41,5 @@ CREATE TABLE IF NOT EXISTS `pastes` (
   `views` bigint(200) NOT NULL,
   `downloads` bigint(200) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=31 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;
 
