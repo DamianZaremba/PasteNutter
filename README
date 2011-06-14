@@ -1,0 +1,6 @@
+PasteNutter
+===========
+
+Simplistic pastebin aimed at IRC channels.
+
+The frontend attempts to figure out a users nick and then hilight them in the channel.
