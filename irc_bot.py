@@ -27,13 +27,12 @@ import MySQLdb
 import time
 
 paste_url = "http://apps.damianzaremba.co.uk/PasteNutter/"
-IRC_SERVER = 'irc.rawrirc.net'
+IRC_SERVER = 'irc.minecraftirc.net'
 IRC_PORT = 6667
 IRC_USER = "PasteBot"
 IRC_NS_PASS = ""
 IRC_CHANNELS = [
-	('#allgamer', ''),
-	('#chat', ''),
+	('#mcpaste', ''),
 ]
 RC_IP = "127.0.0.1"
 RC_PORT = 4398
@@ -237,7 +236,7 @@ class IRCBotProtocol(irc.IRCClient):
 		self.sendLine("PONG %s" % params[-1])
 
 	def irc_RPL_WHOISUSER(self, prefix, params):
-		user = params[5]
+		user = params[1]
 		host = params[3]
 
 		try:
@@ -245,7 +244,7 @@ class IRCBotProtocol(irc.IRCClient):
 		except:
 			ip = host
 
-		self.db.update_user(user, host)
+		self.db.update_user(user, ip)
 
 	def irc_RPL_WHOREPLY(self, prefix, params):
 		user = params[5]
