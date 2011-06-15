@@ -22,6 +22,7 @@ from twisted.python import log
 import thread
 import simplejson as json
 import logging
+import socket
 import random
 import MySQLdb
 import time
@@ -241,7 +242,8 @@ class IRCBotProtocol(irc.IRCClient):
 
 		try:
 			ip = socket.gethostbyname_ex(host)[2][0]
-		except:
+		except Exception, e:
+			logger.info('Socket call failed: %s' % e)
 			ip = host
 
 		self.db.update_user(user, ip)
@@ -252,7 +254,8 @@ class IRCBotProtocol(irc.IRCClient):
 
 		try:
 			ip = socket.gethostbyname_ex(host)[2][0]
-		except:
+		except Exception, e:
+			logger.info('Socket call failed: %s' % e)
 			ip = host
 
 		self.db.add_user(user, ip)
