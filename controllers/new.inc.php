@@ -39,11 +39,15 @@ if(isset($_POST) && array_key_exists("content", $_POST) && array_key_exists("rec
 
 	// Only get users active in the past 10min - we use this in case the bot dies
 	$tlimit = (String) time()-(60*10);
-	$result = mysql_query("SELECT * FROM `irc_users` WHERE `host` = '" . mysql_real_escape_string($user) . "' AND `ping` > '" . $tlimit . "' LIMIT 0,1");
+	$result = mysql_query("SELECT * FROM `irc_users` WHERE `host` = '" . mysql_real_escape_string($user) . "' AND `ping` > '" . $tlimit . "'");
 	$ircnick = False;
-	if(mysql_num_rows($result) === 1) {
-		$data = mysql_fetch_assoc($result);
-		$ircnick = $data['nick'];
+	if(mysql_num_rows($result) > 0) {
+		$ircnick = '';
+		while($data = mysql_fetch_assoc($result)) {
+			if($ircnick != '')
+				$ircnick .= '/';
+			$ircnick .= $data['nick'];
+		}
 	}
 
 	$query = "INSERT INTO `pastes` (`id`, `user`, `syntax`, `paste`, `views`, `downloads`)VALUES (NULL, ";
