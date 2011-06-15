@@ -23,7 +23,7 @@
 		</th>
 		<td>
 			<select name="syntax" id="syntax">
-				<option value="" selected=selected>None</option>
+				<option value="" selected="selected">None</option>
 				<option value="text">Plain Text</option> 
 				<option value="apacheconf">ApacheConf</option> 
 				<option value="as">ActionScript</option> 
