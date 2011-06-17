@@ -37,8 +37,8 @@ IRC_CHANNELS = [
 ]
 RC_IP = "127.0.0.1"
 RC_PORT = 4398
-RC_IP_LIMIT = 3
-RC_LIMIT = 10
+RC_LIMIT_MIN = 2
+RC_LIMIT_HOUR = 10
 DB_HOST = "127.0.0.1"
 DB_USER = "PasteNutter"
 DB_PASS = ""
@@ -69,115 +69,43 @@ class Database:
 			self.connect()
 			return self.conn.cursor()
 
-	def update_limit(self, ip):
-		logger.debug('update_limit called')
-		query = "SELECT * FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % self.escape_string(ip)
-		logger.debug("Running query: %s" % query)
-		cur = self.cursor()
-		cur.execute(query)
-		count = cur.rowcount
-		cur.close()
-
-		if count == 0:
-			query = "INSERT INTO `irc_limits` (`type`, `ip`, `count`) VALUES ('ip', '%s', 0)" % self.escape_string(ip)
-			logger.debug("Running query: %s" % query)
-			cur = self.cursor()
-			cur.execute(query)
-			self.conn.commit()
-			cur.close()
-
-		query = "UPDATE `irc_limits` SET `count` = `count`+1 WHERE `type` = 'ip' AND `ip` = '%s'" % self.escape_string(ip)
-		logger.debug("Running query: %s" % query)
-		cur = self.cursor()
-		cur.execute(query)
-		self.conn.commit()
-		cur.close()
-
-		query = "SELECT * FROM `irc_limits` WHERE `type` = 'global' LIMIT 0,1"
-		logger.debug("Running query: %s" % query)
-		cur = self.cursor()
-		cur.execute(query)
-		count = cur.rowcount
-		cur.close()
-
-		if count == 0:
-			query = "INSERT INTO `irc_limits` (`type`, `ip`, `count`) VALUES ('global', '', 0)"
-			logger.debug("Running query: %s" % query)
-			cur = self.cursor()
-			cur.execute(query)
-			self.conn.commit()
-			cur.close()
-
-		query = "UPDATE `irc_limits` SET `count` = `count`+1 WHERE `type` = 'global'"
-		logger.debug("Running query: %s" % query)
-		cur = self.cursor()
-		cur.execute(query)
-		self.conn.commit()
-		cur.close()
-
-	def check_limit(self):
+	def check_limit(self, user):
 		logger.debug('check_limit called')
 
-		if RC_LIMIT == False:
-			logger.debug('RC_LIMIT disabled')
-			return True
+		if RC_LIMIT_MIN == False:
+			logger.debug('RC_LIMIT_MIN disabled')
+		else:
+			logger.debug('RC_LIMIT_MIN running')
 
-		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'global' LIMIT 0,1"
-		logger.debug("Running query: %s" % query)
-		cur = self.cursor()
-		cur.execute(query)
-		row = cur.fetchone()
-		count = int(row[0])
-		reset = int(row[1])
-		cur.close()
-
-		tlimit = int(int(time.time()) - 3600)
-		tnow = str(int(time.time()))
-		if tlimit > reset:
-			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'global'" % self.escape_string(tnow)
+			tlimit = str(int(time.time()) - 60)
+			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % self.escape_string(tlimit)
 			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
-			self.conn.commit()
+			row = cur.fetchone()
+			count = int(row[0])
 			cur.close()
-			return True
 
-		if count > RC_LIMIT:
-			return False
+			if count > RC_LIMIT_MIN:
+				return False
+
+		if RC_LIMIT_HOUR == False:
+			logger.debug('RC_LIMIT_HOUR disabled')
 		else:
-			return True
+			logger.debug('RC_LIMIT_HOUR running')
 
-	def check_ip_limit(self, ip):
-		logger.debug('check_limit called')
-
-		if RC_IP_LIMIT == False:
-			logger.debug('RC_IP_LIMIT disabled')
-			return True
-
-		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % self.escape_string(ip)
+			tlimit = str(int(time.time()) - 3600)
+			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % self.escape_string(tlimit)
 		logger.debug("Running query: %s" % query)
-		cur = self.cursor()
-		cur.execute(query)
-		row = cur.fetchone()
-		count = int(row[0])
-		reset = int(row[1])
-		cur.close()
-
-		tlimit = int(int(time.time()) - 3600)
-		tnow = str(int(time.time()))
-		if tlimit > reset:
-			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'ip' AND `ip` = '%s'" % (self.escape_string(tnow), self.escape_string(ip))
-			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
-			self.conn.commit()
+			row = cur.fetchone()
+			count = int(row[0])
 			cur.close()
-			return True
 
-		if count > RC_IP_LIMIT:
-			return False
-		else:
-			return True
+			if count > RC_LIMIT_HOUR:
+				return False
+		return True
 
 	def pong(self):
 		ptime = str(int(time.time()))
@@ -264,8 +192,7 @@ class WebNotify(DatagramProtocol):
 			logger.info("Bad data rev'd")
 			return
 
-		if "ip" in sdata and "user" in sdata and "url" in sdata:
-			ip = sdata["ip"]
+		if "user" in sdata and "url" in sdata:
 			user = sdata["user"]
 			url = sdata["url"]
 
@@ -273,7 +200,7 @@ class WebNotify(DatagramProtocol):
 			if "format" in sdata and len(str(sdata['format'])) > 0:
 				format = sdata["format"]
 
-			self.callback(ip, user, url, format)
+			self.callback(user, url, format)
 
 class IRCBotProtocol(irc.IRCClient):
 	nickname = IRC_USER
@@ -283,7 +210,7 @@ class IRCBotProtocol(irc.IRCClient):
 		self.join_channels = join_channels
 		self.db = Database()
 	
-	def webnotify_callback(self, ip, user, link, format=False):
+	def webnotify_callback(self, user, link, format=False):
 		msg = "%s pasted %s" % (user, link)
 		if format:
 			msg += " (%s)" % format
@@ -293,8 +220,7 @@ class IRCBotProtocol(irc.IRCClient):
 
 		for channel in self.channels:
 			if self.channels[channel] == True:
-				self.db.update_limit(ip)
-				if self.db.check_limit() and self.db.check_ip_limit(ip):
+				if self.db.check_limit(user):
 					logger.debug("Sending '%s' to %s" % (msg, channel))
 					self.msg(str(channel), str(msg))
 			else:

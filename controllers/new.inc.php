@@ -82,7 +82,6 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 		$socket = @fsockopen("udp://" . $rc_host . ":" . $rc_port);
 		if($socket) {
 			$data = json_encode(array(
-				"ip" => $user,
 				"user" => ($ircnick === False) ? $user : $ircnick,
 				"url" => $base_url . "/" . $id,
 				"format" => $syntax,
