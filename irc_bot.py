@@ -117,6 +117,11 @@ class Database:
 
 	def check_limit(self):
 		logger.debug('check_limit called')
+
+		if RC_LIMIT === False:
+			logger.debug('RC_LIMIT disabled')
+			return True
+
 		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'global' LIMIT 0,1"
 		logger.debug("Running query: %s" % query)
 		cur = self.cursor()
@@ -144,6 +149,11 @@ class Database:
 
 	def check_ip_limit(self, ip):
 		logger.debug('check_limit called')
+
+		if RC_IP_LIMIT === False:
+			logger.debug('RC_IP_LIMIT disabled')
+			return True
+
 		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % ip
 		logger.debug("Running query: %s" % query)
 		cur = self.cursor()
