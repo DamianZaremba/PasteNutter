@@ -124,12 +124,14 @@
 			</select>
 		</td>
 	</tr> 
+	{if isset($recapthca_box)}
 	<tr>
 		<th>Are you human?</th>
 		<td>
 			{$recaptcha_box}
 		</td>
 	</tr>
+	{/if}
 	<tr>
 		<th>&nbsp;</th>
 		<td>

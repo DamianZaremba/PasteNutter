@@ -16,6 +16,19 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `irc_limits`
+--
+
+CREATE TABLE IF NOT EXISTS `irc_limits` (
+  `type` enum('ip', 'global') NOT NULL,
+  `ip` varchar(2000) NOT NULL,
+  `reset` BIGINT(100) NOT NULL DEFAULT  '0',
+  `count` bigint(60) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `irc_users`
 --
 

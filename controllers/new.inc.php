@@ -16,7 +16,7 @@
   * along with PasteNutter.  If not, see <http://www.gnu.org/licenses/>. 
   */
 
-if(isset($_POST) && array_key_exists("content", $_POST) && array_key_exists("recaptcha_challenge_field", $_POST) && array_key_exists("recaptcha_response_field", $_POST)) {
+if(isset($_POST) && array_key_exists("content", $_POST)) {
 	if (isset($_SERVER["REMOTE_ADDR"])) {
 		$user = $_SERVER["REMOTE_ADDR"];
 	} else if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
@@ -27,14 +27,24 @@ if(isset($_POST) && array_key_exists("content", $_POST) && array_key_exists("rec
 		$user = "Unknown";
 	}
 
-	 $resp = recaptcha_check_answer($recaptcha_privkey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
-	if(!$resp->is_valid) {
-		$smarty->assign('content', $_POST['content']);
-		$smarty->assign('syntax', $_POST['syntax']);
-		$smarty->assign('recaptcha_box', recaptcha_get_html($recaptcha_pubkey));
-		$smarty->assign('badCaptcha', True);
-		$smarty->display('new.tpl');
-		die();
+	if($recaptcha_enabled === True) {
+		if(array_key_exists("recaptcha_challenge_field", $_POST) && array_key_exists("recaptcha_response_field", $_POST)) {
+			$resp = recaptcha_check_answer($recaptcha_privkey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
+			if(!$resp->is_valid) {
+				$smarty->assign('content', $_POST['content']);
+				$smarty->assign('syntax', $_POST['syntax']);
+				$smarty->assign('recaptcha_box', recaptcha_get_html($recaptcha_pubkey));
+				$smarty->assign('badCaptcha', True);
+				die();
+			}
+		} else {
+				$smarty->assign('content', $_POST['content']);
+				$smarty->assign('syntax', $_POST['syntax']);
+				$smarty->assign('recaptcha_box', recaptcha_get_html($recaptcha_pubkey));
+				$smarty->assign('badCaptcha', True);
+				$smarty->display('new.tpl');
+				die();
+		}
 	}
 
 	// Only get users active in the past 10min - we use this in case the bot dies
@@ -72,6 +82,7 @@ if(isset($_POST) && array_key_exists("content", $_POST) && array_key_exists("rec
 		$socket = @fsockopen("udp://" . $rc_host . ":" . $rc_port);
 		if($socket) {
 			$data = json_encode(array(
+				"ip" => $user,
 				"user" => ($ircnick === False) ? $user : $ircnick,
 				"url" => $base_url . "/" . $id,
 				"format" => $syntax,
@@ -82,7 +93,9 @@ if(isset($_POST) && array_key_exists("content", $_POST) && array_key_exists("rec
 	}
 	header('Location: ' . $base_url . '/' . $id);
 } else {
-	$smarty->assign('recaptcha_box', recaptcha_get_html($recaptcha_pubkey));
+	if($recaptcha_enabled === True) {
+		$smarty->assign('recaptcha_box', recaptcha_get_html($recaptcha_pubkey));
+	}
 	$smarty->display('new.tpl');
 }
 ?>

@@ -26,6 +26,7 @@
 	$rc_port = 4398;
 	$rc_unknown = False;
 
+	$recaptcha_enabled = False;
 	$recaptcha_privkey = "";
 	$recaptcha_pubkey = "";
 

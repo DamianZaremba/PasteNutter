@@ -37,6 +37,8 @@ IRC_CHANNELS = [
 ]
 RC_IP = "127.0.0.1"
 RC_PORT = 4398
+RC_IP_LIMIT = 3
+RC_LIMIT = 10
 DB_HOST = "127.0.0.1"
 DB_USER = "PasteNutter"
 DB_PASS = ""
@@ -66,7 +68,107 @@ class Database:
 		except (AttributeError, MySQLdb.OperationalError):
 			self.connect()
 			return self.conn.cursor()
-	
+
+	def update_limit(self, ip):
+		logger.debug('update_limit called')
+		query = "SELECT * FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % ip
+		logger.debug("Running query: %s" % query)
+		cur = self.cursor()
+		cur.execute(query)
+		count = cur.rowcount
+		cur.close()
+
+		if count == 0:
+			query = "INSERT INTO `irc_limits` (`type`, `ip`, `count`) VALUES ('ip', '%s', 0)" % self.escape_string(ip)
+			logger.debug("Running query: %s" % query)
+			cur = self.cursor()
+			cur.execute(query)
+			self.conn.commit()
+			cur.close()
+
+		query = "UPDATE `irc_limits` SET `count` = `count`+1 WHERE `type` = 'ip' AND `ip` = '%s'" % ip
+		logger.debug("Running query: %s" % query)
+		cur = self.cursor()
+		cur.execute(query)
+		self.conn.commit()
+		cur.close()
+
+		query = "SELECT * FROM `irc_limits` WHERE `type` = 'global' LIMIT 0,1"
+		logger.debug("Running query: %s" % query)
+		cur = self.cursor()
+		cur.execute(query)
+		count = cur.rowcount
+		cur.close()
+
+		if count == 0:
+			query = "INSERT INTO `irc_limits` (`type`, `ip`, `count`) VALUES ('global', '', 0)"
+			logger.debug("Running query: %s" % query)
+			cur = self.cursor()
+			cur.execute(query)
+			self.conn.commit()
+			cur.close()
+
+		query = "UPDATE `irc_limits` SET `count` = `count`+1 WHERE `type` = 'global'"
+		logger.debug("Running query: %s" % query)
+		cur = self.cursor()
+		cur.execute(query)
+		self.conn.commit()
+		cur.close()
+
+	def check_limit(self):
+		logger.debug('check_limit called')
+		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'global' LIMIT 0,1"
+		logger.debug("Running query: %s" % query)
+		cur = self.cursor()
+		cur.execute(query)
+		row = cur.fetchone()
+		count = int(row[0])
+		reset = int(row[1])
+		cur.close()
+
+		tlimit = int(int(time.time()) - 3600)
+		tnow = str(int(time.time()))
+		if tlimit > reset:
+			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'global'" % tnow
+			logger.debug("Running query: %s" % query)
+			cur = self.cursor()
+			cur.execute(query)
+			self.conn.commit()
+			cur.close()
+			return True
+
+		if count > RC_LIMIT:
+			return False
+		else:
+			return True
+
+	def check_ip_limit(self, ip):
+		logger.debug('check_limit called')
+		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % ip
+		logger.debug("Running query: %s" % query)
+		cur = self.cursor()
+		cur.execute(query)
+		row = cur.fetchone()
+		count = int(row[0])
+		reset = int(row[1])
+		cur.close()
+
+		tlimit = int(int(time.time()) - 3600)
+		tnow = str(int(time.time()))
+		if tlimit > reset:
+			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'ip' AND `ip` = '%s'" % (tnow, ip)
+			logger.debug("Running query: %s" % query)
+			cur = self.cursor()
+			cur.execute(query)
+			self.conn.commit()
+			cur.close()
+			return True
+
+		if count > RC_IP_LIMIT:
+			return False
+		else:
+			return True
+
 	def pong(self):
 		ptime = str(int(time.time()))
 		logger.debug('db.pong called')
@@ -152,7 +254,8 @@ class WebNotify(DatagramProtocol):
 			logger.info("Bad data rev'd")
 			return
 
-		if "user" in sdata and "url" in sdata:
+		if "ip" in sdata and "user" in sdata and "url" in sdata:
+			ip = sdata["ip"]
 			user = sdata["user"]
 			url = sdata["url"]
 
@@ -160,7 +263,7 @@ class WebNotify(DatagramProtocol):
 			if "format" in sdata and len(str(sdata['format'])) > 0:
 				format = sdata["format"]
 
-			self.callback(user, url, format)
+			self.callback(ip, user, url, format)
 
 class IRCBotProtocol(irc.IRCClient):
 	nickname = IRC_USER
@@ -170,7 +273,7 @@ class IRCBotProtocol(irc.IRCClient):
 		self.join_channels = join_channels
 		self.db = Database()
 	
-	def webnotify_callback(self, user, link, format=False):
+	def webnotify_callback(self, ip, user, link, format=False):
 		msg = "%s pasted %s" % (user, link)
 		if format:
 			msg += " (%s)" % format
@@ -180,8 +283,12 @@ class IRCBotProtocol(irc.IRCClient):
 
 		for channel in self.channels:
 			if self.channels[channel] == True:
-				logger.debug("Sending '%s' to %s" % (msg, channel))
-				self.msg(str(channel), str(msg))
+				self.db.update_limit(ip)
+				if self.db.check_limit() and self.db.check_ip_limit(ip):
+					logger.debug("Sending '%s' to %s" % (msg, channel))
+					self.msg(str(channel), str(msg))
+			else:
+				logger.info("Skipping '%s' to '%s' due to limits" % (msg, channel))
 
 	def signedOn(self):
 		self.factory.webnotify.callback = self.webnotify_callback
