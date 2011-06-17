@@ -60,7 +60,9 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 		}
 	}
 
-	$query = "INSERT INTO `pastes` (`id`, `user`, `ip_address`, `syntax`, `paste`, `views`, `downloads`)VALUES (NULL, ";
+	$query = "INSERT INTO `pastes` (`id`, `time`, `user`, `ip_address`, `syntax`, `paste`, `views`, `downloads`)VALUES (NULL, ";
+	$query .= "'" . time() . "', ";
+
 	if($ircnick === False) {
 		$query .= "'" . mysql_real_escape_string($user) . "', ";
 	} else {
