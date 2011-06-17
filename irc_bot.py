@@ -78,8 +78,7 @@ class Database:
 			logger.debug('RC_LIMIT_MIN running')
 
 			tlimit = str(int(time.time()) - 60)
-			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" %
-			(self.escape_string(tlimit), self.escape_string(user))
+			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % (self.escape_string(tlimit), self.escape_string(user))
 			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
@@ -96,8 +95,7 @@ class Database:
 			logger.debug('RC_LIMIT_HOUR running')
 
 			tlimit = str(int(time.time()) - 3600)
-			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" %
-			(self.escape_string(tlimit), self.escape_string(user))
+			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % (self.escape_string(tlimit), self.escape_string(user))
 			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
