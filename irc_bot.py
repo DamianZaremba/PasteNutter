@@ -27,13 +27,13 @@ import random
 import MySQLdb
 import time
 
-paste_url = "http://apps.damianzaremba.co.uk/PasteNutter/"
-IRC_SERVER = 'irc.minecraftirc.net'
+paste_url = "http://paste.minecraftirc.net/"
+IRC_SERVER = 'irc.esper.net'
 IRC_PORT = 6667
-IRC_USER = "PasteBot"
+IRC_USER = "McPaste"
 IRC_NS_PASS = ""
 IRC_CHANNELS = [
-	('#mcpaste', ''),
+        ('#mcpaste', ''),
 ]
 RC_IP = "127.0.0.1"
 RC_PORT = 4398
@@ -78,14 +78,16 @@ class Database:
 			logger.debug('RC_LIMIT_MIN running')
 
 			tlimit = str(int(time.time()) - 60)
-			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % (self.escape_string(tlimit), self.escape_string(user))
+			logger.debug('RC_LIMIT_MIN: Current time: %d, tlimit: %s' % (int(time.time()), int(tlimit)))
+
+			query = "SELECT * FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % (self.escape_string(user), self.escape_string(tlimit))
 			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
-			row = cur.fetchone()
-			count = int(row[0])
+			count = int(cur.rowcount)
 			cur.close()
 
+			logger.debug('Min limit: Found %d > %d' % (count, RC_LIMIT_MIN))
 			if count > RC_LIMIT_MIN:
 				return False
 
@@ -95,15 +97,16 @@ class Database:
 			logger.debug('RC_LIMIT_HOUR running')
 
 			tlimit = str(int(time.time()) - 3600)
-			query = "SELECT COUNT(*) FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" %
-			(self.escape_string(tlimit), self.escape_string(user))
+			logger.debug('RC_LIMIT_HOUR: Current time: %d, tlimit: %s' % (int(time.time()), int(tlimit)))
+
+			query = "SELECT * FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % (self.escape_string(user), self.escape_string(tlimit))
 			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
-			row = cur.fetchone()
-			count = int(row[0])
+			count = int(cur.rowcount)
 			cur.close()
 
+			logger.debug('Hour limit: Found %d > %d' % (count, RC_LIMIT_HOUR))
 			if count > RC_LIMIT_HOUR:
 				return False
 		return True
@@ -224,8 +227,8 @@ class IRCBotProtocol(irc.IRCClient):
 				if self.db.check_limit(user):
 					logger.debug("Sending '%s' to %s" % (msg, channel))
 					self.msg(str(channel), str(msg))
-			else:
-				logger.info("Skipping '%s' to '%s' due to limits" % (msg, channel))
+				else:
+					logger.info("Skipping '%s' to '%s' due to limits" % (msg, channel))
 
 	def signedOn(self):
 		self.factory.webnotify.callback = self.webnotify_callback
