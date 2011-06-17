@@ -118,7 +118,7 @@ class Database:
 	def check_limit(self):
 		logger.debug('check_limit called')
 
-		if RC_LIMIT === False:
+		if RC_LIMIT == False:
 			logger.debug('RC_LIMIT disabled')
 			return True
 
@@ -150,7 +150,7 @@ class Database:
 	def check_ip_limit(self, ip):
 		logger.debug('check_limit called')
 
-		if RC_IP_LIMIT === False:
+		if RC_IP_LIMIT == False:
 			logger.debug('RC_IP_LIMIT disabled')
 			return True
 
