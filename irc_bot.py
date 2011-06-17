@@ -71,7 +71,7 @@ class Database:
 
 	def update_limit(self, ip):
 		logger.debug('update_limit called')
-		query = "SELECT * FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % ip
+		query = "SELECT * FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % self.escape_string(ip)
 		logger.debug("Running query: %s" % query)
 		cur = self.cursor()
 		cur.execute(query)
@@ -86,7 +86,7 @@ class Database:
 			self.conn.commit()
 			cur.close()
 
-		query = "UPDATE `irc_limits` SET `count` = `count`+1 WHERE `type` = 'ip' AND `ip` = '%s'" % ip
+		query = "UPDATE `irc_limits` SET `count` = `count`+1 WHERE `type` = 'ip' AND `ip` = '%s'" % self.escape_string(ip)
 		logger.debug("Running query: %s" % query)
 		cur = self.cursor()
 		cur.execute(query)
@@ -134,7 +134,7 @@ class Database:
 		tlimit = int(int(time.time()) - 3600)
 		tnow = str(int(time.time()))
 		if tlimit > reset:
-			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'global'" % tnow
+			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'global'" % self.escape_string(tnow)
 			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
@@ -154,7 +154,7 @@ class Database:
 			logger.debug('RC_IP_LIMIT disabled')
 			return True
 
-		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % ip
+		query = "SELECT `count`, `reset` FROM `irc_limits` WHERE `type` = 'ip' AND `ip` = '%s' LIMIT 0,1" % self.escape_string(ip)
 		logger.debug("Running query: %s" % query)
 		cur = self.cursor()
 		cur.execute(query)
@@ -166,7 +166,7 @@ class Database:
 		tlimit = int(int(time.time()) - 3600)
 		tnow = str(int(time.time()))
 		if tlimit > reset:
-			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'ip' AND `ip` = '%s'" % (tnow, ip)
+			query = "UPDATE `irc_limits` SET `reset` = '%s' WHERE `type` = 'ip' AND `ip` = '%s'" % (self.escape_string(tnow), self.escape_string(ip))
 			logger.debug("Running query: %s" % query)
 			cur = self.cursor()
 			cur.execute(query)
