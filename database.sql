@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS `pastes` (
   `id` int(20) NOT NULL AUTO_INCREMENT,
   `time` BIGINT(60) NOT NULL,
   `user` varchar(50) DEFAULT NULL,
+  `ip_address` varchar(2000),
   `syntax` varchar(200) DEFAULT NULL,
   `paste` text NOT NULL,
   `views` bigint(200) NOT NULL,

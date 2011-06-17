@@ -60,12 +60,14 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 		}
 	}
 
-	$query = "INSERT INTO `pastes` (`id`, `user`, `syntax`, `paste`, `views`, `downloads`)VALUES (NULL, ";
+	$query = "INSERT INTO `pastes` (`id`, `user`, `ip_address`, `syntax`, `paste`, `views`, `downloads`)VALUES (NULL, ";
 	if($ircnick === False) {
 		$query .= "'" . mysql_real_escape_string($user) . "', ";
 	} else {
 		$query .= "'" . mysql_real_escape_string($ircnick) . "', ";
 	}
+
+	$query .= "'" . mysql_real_escape_string($user) . "', ";
 
 	if(isset($_POST) && array_key_exists("syntax", $_POST) && !empty($_POST["syntax"])) {
 		$syntax = $_POST['syntax'];
