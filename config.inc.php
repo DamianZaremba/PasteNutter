@@ -25,6 +25,8 @@
 	$rc_host = "localhost";
 	$rc_port = 4398;
 	$rc_unknown = False;
+	$rc_limit_min = 2;
+	$rc_limit_hour = 10;
 
 	$recaptcha_enabled = False;
 	$recaptcha_privkey = "";

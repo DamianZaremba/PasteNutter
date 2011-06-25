@@ -37,8 +37,6 @@ IRC_CHANNELS = [
 ]
 RC_IP = "127.0.0.1"
 RC_PORT = 4398
-RC_LIMIT_MIN = 2
-RC_LIMIT_HOUR = 10
 DB_HOST = "127.0.0.1"
 DB_USER = "PasteNutter"
 DB_PASS = ""
@@ -68,48 +66,6 @@ class Database:
 		except (AttributeError, MySQLdb.OperationalError):
 			self.connect()
 			return self.conn.cursor()
-
-	def check_limit(self, user):
-		logger.debug('check_limit called')
-
-		if RC_LIMIT_MIN == False:
-			logger.debug('RC_LIMIT_MIN disabled')
-		else:
-			logger.debug('RC_LIMIT_MIN running')
-
-			tlimit = str(int(time.time()) - 60)
-			logger.debug('RC_LIMIT_MIN: Current time: %d, tlimit: %s' % (int(time.time()), int(tlimit)))
-
-			query = "SELECT * FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % (self.escape_string(user), self.escape_string(tlimit))
-			logger.debug("Running query: %s" % query)
-			cur = self.cursor()
-			cur.execute(query)
-			count = int(cur.rowcount)
-			cur.close()
-
-			logger.debug('Min limit: Found %d > %d' % (count, RC_LIMIT_MIN))
-			if count > RC_LIMIT_MIN:
-				return False
-
-		if RC_LIMIT_HOUR == False:
-			logger.debug('RC_LIMIT_HOUR disabled')
-		else:
-			logger.debug('RC_LIMIT_HOUR running')
-
-			tlimit = str(int(time.time()) - 3600)
-			logger.debug('RC_LIMIT_HOUR: Current time: %d, tlimit: %s' % (int(time.time()), int(tlimit)))
-
-			query = "SELECT * FROM `pastes` WHERE `user` = '%s' AND `time` > '%s'" % (self.escape_string(user), self.escape_string(tlimit))
-			logger.debug("Running query: %s" % query)
-			cur = self.cursor()
-			cur.execute(query)
-			count = int(cur.rowcount)
-			cur.close()
-
-			logger.debug('Hour limit: Found %d > %d' % (count, RC_LIMIT_HOUR))
-			if count > RC_LIMIT_HOUR:
-				return False
-		return True
 
 	def pong(self):
 		ptime = str(int(time.time()))
@@ -224,11 +180,8 @@ class IRCBotProtocol(irc.IRCClient):
 
 		for channel in self.channels:
 			if self.channels[channel] == True:
-				if self.db.check_limit(user):
-					logger.debug("Sending '%s' to %s" % (msg, channel))
-					self.msg(str(channel), str(msg))
-				else:
-					logger.info("Skipping '%s' to '%s' due to limits" % (msg, channel))
+				logger.debug("Sending '%s' to %s" % (msg, channel))
+				self.msg(str(channel), str(msg))
 
 	def signedOn(self):
 		self.factory.webnotify.callback = self.webnotify_callback

@@ -64,11 +64,11 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 	$query .= "'" . time() . "', ";
 
 	if($ircnick === False) {
-		$query .= "'" . mysql_real_escape_string($user) . "', ";
+		$our_user = mysql_real_escape_string($ircnick);
 	} else {
-		$query .= "'" . mysql_real_escape_string($ircnick) . "', ";
+		$our_user = mysql_real_escape_string($ircnick);
 	}
-
+	$query .= "'" . $our_user . "', ";
 	$query .= "'" . mysql_real_escape_string($user) . "', ";
 
 	if(isset($_POST) && array_key_exists("syntax", $_POST) && !empty($_POST["syntax"])) {
@@ -83,15 +83,21 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 
 	$id = mysql_insert_id();
 	if(($ircnick === False && $rc_unknown === True) || $ircnick !== False) {
-		$socket = @fsockopen("udp://" . $rc_host . ":" . $rc_port);
-		if($socket) {
-			$data = json_encode(array(
-				"user" => ($ircnick === False) ? $user : $ircnick,
-				"url" => $base_url . "/" . $id,
-				"format" => $syntax,
-			));
-			fwrite($socket, $data);
-			fclose($socket);
+		$row = mysql_fetch_assoc( mysql_query('SELECT COUNT(*) as `count` FROM `pastes` WHERE `user` = "' . $our_user . '" AND `time` > "' . (time()-60) . '"') );
+		if($row && $row['count'] < $rc_limit_min) {
+			$row = mysql_fetch_assoc( mysql_query('SELECT COUNT(*) as `count` FROM `pastes` WHERE `user` = "' . $our_user . '" AND `time` > "' . (time()-3600) . '"') );
+			if($row && $row['count'] < $rc_limit_hour) {
+				$socket = @fsockopen("udp://" . $rc_host . ":" . $rc_port);
+				if($socket) {
+					$data = json_encode(array(
+						"user" => ($ircnick === False) ? $user : $ircnick,
+						"url" => $base_url . "/" . $id,
+						"format" => $syntax,
+					));
+					fwrite($socket, $data);
+					fclose($socket);
+				}
+			}
 		}
 	}
 	header('Location: ' . $base_url . '/' . $id);
