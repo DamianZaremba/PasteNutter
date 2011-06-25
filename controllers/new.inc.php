@@ -64,7 +64,7 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 	$query .= "'" . time() . "', ";
 
 	if($ircnick === False) {
-		$our_user = mysql_real_escape_string($ircnick);
+		$our_user = mysql_real_escape_string($user);
 	} else {
 		$our_user = mysql_real_escape_string($ircnick);
 	}
@@ -100,7 +100,7 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 			}
 		}
 	}
-	header('Location: ' . $base_url . '/' . $id);
+	//header('Location: ' . $base_url . '/' . $id);
 } else {
 	if($recaptcha_enabled === True) {
 		$smarty->assign('recaptcha_box', recaptcha_get_html($recaptcha_pubkey));
@@ -108,3 +108,4 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 	$smarty->display('new.tpl');
 }
 ?>
+
