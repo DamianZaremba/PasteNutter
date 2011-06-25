@@ -100,7 +100,7 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 			}
 		}
 	}
-	//header('Location: ' . $base_url . '/' . $id);
+	header('Location: ' . $base_url . '/' . $id);
 } else {
 	if($recaptcha_enabled === True) {
 		$smarty->assign('recaptcha_box', recaptcha_get_html($recaptcha_pubkey));
