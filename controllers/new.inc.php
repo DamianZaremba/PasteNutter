@@ -84,9 +84,9 @@ if(isset($_POST) && array_key_exists("content", $_POST)) {
 	$id = mysql_insert_id();
 	if(($ircnick === False && $rc_unknown === True) || $ircnick !== False) {
 		$row = mysql_fetch_assoc( mysql_query('SELECT COUNT(*) as `count` FROM `pastes` WHERE `user` = "' . $our_user . '" AND `time` > "' . (time()-60) . '"') );
-		if($row && $row['count'] < $rc_limit_min) {
+		if($row && $row['count'] <= $rc_limit_min) {
 			$row = mysql_fetch_assoc( mysql_query('SELECT COUNT(*) as `count` FROM `pastes` WHERE `user` = "' . $our_user . '" AND `time` > "' . (time()-3600) . '"') );
-			if($row && $row['count'] < $rc_limit_hour) {
+			if($row && $row['count'] <= $rc_limit_hour) {
 				$socket = @fsockopen("udp://" . $rc_host . ":" . $rc_port);
 				if($socket) {
 					$data = json_encode(array(
