@@ -45,7 +45,7 @@ if(isset($_SERVER) && array_key_exists('PATH_INFO', $_SERVER)) {
 	$pasteID = substr($_SERVER['REQUEST_URI'], 0, $fget);
 }
 
-if(!$pasteID) {
+if(!isset($pasteID)) {
 	$controller_path = realpath($base_dir . "/controllers/new.inc.php");
 } else {
 	$controller_path = realpath($base_dir . "/controllers/view.inc.php");
