@@ -37,17 +37,17 @@ if(@mysql_select_db($db_scheme) === False) {
 }
 
 if(isset($_SERVER) && array_key_exists('PATH_INFO', $_SERVER)) {
-	$pasteID = (Int) $_SERVER['PATH_INFO'];
+	$pasteID = $_SERVER['PATH_INFO'];
 } else if(isset($_SERVER) && array_key_exists('ORIG_PATH_INFO', $_SERVER)) {
-	$pasteID = (Int) $_SERVER['ORIG_PATH_INFO'];
+	$pasteID = $_SERVER['ORIG_PATH_INFO'];
 } else if(isset($_SERVER) && array_key_exists('REQUEST_URI', $_SERVER)) {
 	$fget = strpos($_SERVER['REQUEST_URI'], '?');
-	$pasteID = (Int) substr($_SERVER['REQUEST_URI'], 0, $fget);
+	$pasteID = substr($_SERVER['REQUEST_URI'], 0, $fget);
 }
 
-if(isset($pasteID) && is_numeric($pasteID)) {
+$pasteID = preg_replace("([^0-9])", "", $pasteID);
+if(isset($pasteID) && !empty($pasteID)) {
 	$controller_path = realpath($base_dir . "/controllers/view.inc.php");
-	$pasteID = preg_replace("([^0-9])", "", $pasteID);
 } else {
 	$controller_path = realpath($base_dir . "/controllers/new.inc.php");
 }
