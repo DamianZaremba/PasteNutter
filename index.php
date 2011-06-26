@@ -45,11 +45,11 @@ if(isset($_SERVER) && array_key_exists('PATH_INFO', $_SERVER)) {
 	$pasteID = substr($_SERVER['REQUEST_URI'], 0, $fget);
 }
 
-if(!isset($pasteID)) {
-	$controller_path = realpath($base_dir . "/controllers/new.inc.php");
-} else {
+if(isset($pasteID) && is_numeric($pasteID)) {
 	$controller_path = realpath($base_dir . "/controllers/view.inc.php");
 	$pasteID = preg_replace("([^0-9])", "", $pasteID);
+} else {
+	$controller_path = realpath($base_dir . "/controllers/new.inc.php");
 }
 
 if(!$controller_path) {
