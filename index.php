@@ -37,12 +37,12 @@ if(@mysql_select_db($db_scheme) === False) {
 }
 
 if(isset($_SERVER) && array_key_exists('PATH_INFO', $_SERVER)) {
-	$pasteID = $_SERVER['PATH_INFO'];
+	$pasteID = (Int) $_SERVER['PATH_INFO'];
 } else if(isset($_SERVER) && array_key_exists('ORIG_PATH_INFO', $_SERVER)) {
-	$pasteID = $_SERVER['ORIG_PATH_INFO'];
+	$pasteID = (Int) $_SERVER['ORIG_PATH_INFO'];
 } else if(isset($_SERVER) && array_key_exists('REQUEST_URI', $_SERVER)) {
 	$fget = strpos($_SERVER['REQUEST_URI'], '?');
-	$pasteID = substr($_SERVER['REQUEST_URI'], 0, $fget);
+	$pasteID = (Int) substr($_SERVER['REQUEST_URI'], 0, $fget);
 }
 
 if(isset($pasteID) && is_numeric($pasteID)) {
