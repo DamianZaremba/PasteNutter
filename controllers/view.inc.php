@@ -49,6 +49,8 @@ if($download === True) {
 	} else {
 		$geshi = new GeSHi($data['paste'], $data['syntax'], $base_dir . '/lib/geshi/');
 		if($geshi) {
+			$geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS);
+			$geshi->enable_classes();
 			$paste = $geshi->parse_code();
 		} else {
 			$paste = "<pre>" . htmlentities($data['paste']) . "</pre>";
